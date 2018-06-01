@@ -1,11 +1,55 @@
-var AFClass = require("./AFClass");
+var eventsApi = function(iteratee, events, name, callback, opts) {
+    if(typeof name === 'string'){
+        name.replace(/\W*(\w*)\W*/g, function($0, $1){
+            $1 && (events = iteratee(events, $1, callback, opts));
+        });
+    }
+    return events;
+};
+
+var onApi = function(events, name, callback, options) {
+    if (callback) {
+        var handlers = events[name] || (events[name] = []);
+        var context = options.context, ctx = options.ctx, listening = options.listening;
+        if (listening) listening.count++;
+
+        handlers.push({callback: callback, context: context, ctx: context || ctx, listening: listening});
+    }
+    return events;
+};
+
+var internalOn = function(obj, name, callback, context, listening) {
+    obj._events = eventsApi(onApi, obj._events || {}, name, callback, {
+      context: context,
+      ctx: obj,
+      listening: listening
+    });
+
+    if (listening) {
+      var listeners = obj._listeners || (obj._listeners = {});
+      listeners[listening.id] = listening;
+    }
+    return obj;
+};
+
+var triggerApi = function(objEvents, name, callback, args) {
+    var events = objEvents ? objEvents[name] : null;
+    if (events) {
+        var i = -1, l = events.length;
+        while(++i < l){
+            var ev = events[i];
+            ev.callback.apply(ev.ctx, args);
+        }
+    }
+    return objEvents;
+};
 
 /**
  * 事件
  */
-var AFEvent = AFClass({
+var AFEvent = af.Class({
     /**
-     * 事件
+     * 类名
      */
     name: "AFEvent",
     
@@ -41,8 +85,6 @@ var AFEvent = AFClass({
      * 分发事件
      */
     emit: function(name){
-        console.log("emit");
-
         if (!this._events) return this;
   
         var length = Math.max(0, arguments.length - 1);

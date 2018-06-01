@@ -1,6 +1,3 @@
-var AFClass = require("./AFClass");
-var AFEvent = require("./AFEvent");
-
 function doDefineProp(content, name, value){
     var val = value;
     Object.defineProperty(content, name, {
@@ -20,8 +17,8 @@ var AFModel = function(options){
     var base = options.extends;
     var properties = options.properties;
     var mixins = options.mixins == null && (options.mixins = [], options.mixins);
-    mixins.push(AFEvent);
-    var afClass = AFClass(options);
+    mixins.push(af.Event);
+    var afClass = af.Class(options);
     
     var prototype = afClass.prototype;
     doDefineProp(prototype, "_changeValue", function(){
